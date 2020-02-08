@@ -1,5 +1,5 @@
 # Asset Load Bundle
-This contao module adds a Content Element that allows you to use a specific layout.
+This contao module allow you to load assets
 
 ### Requirements
 Contao >4 (tested with 4.8)
