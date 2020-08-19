@@ -90,11 +90,19 @@ class AssetHelper
      */
     protected static function renderResource($type, $path): ?string
     {
+        $hash = \System::getContainer()->getParameter('githash');
+
+        if ($hash) {
+            $version = '?version=' . $hash;
+        } else {
+            $version = '';
+        }
+
         switch($type) {
             case 'css':
-                return "<link type=\"text/css\" href=\"{$path}\" rel=\"stylesheet\">\n";
+                return "<link type=\"text/css\" href=\"{$path}{$version}\" rel=\"stylesheet\">\n";
             case 'js':
-                return "<script src=\"{$path}\"></script>\n";
+                return "<script src=\"{$path}{$version}\"></script>\n";
             default:
                 return "<!-- don't know how to render '{$type}' -->\n";
         }
