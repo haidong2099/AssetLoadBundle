@@ -1,25 +1,25 @@
 {
-  "name": "guave/assetload-bundle",
-  "description": "",
-  "type": "contao-bundle",
-  "license": "MIT",
-  "authors": [
-    {
-      "name": "Rodrigo Stadler",
-      "email": "rodrigo.stadler@guavestudios.com",
-      "homepage": "https://github.com/guavestudios"
-    }
-  ],
-  "require": {
-    "contao/core-bundle": "^4.4"
-  },
-  "autoload": {
-    "psr-4": {
-      "Guave\\AssetLoadBundle\\": "src/"
-    }
-  },
-  "extra": {
-    "contao-manager-plugin": "Guave\\AssetLoadBundle\\ContaoManager\\Plugin"
-  },
-  "minimum-stability": "stable"
+	"name": "guave/assetload-bundle",
+	"description": "Asset Load Helper and Insert Tags for Contao 4.9+",
+	"type": "contao-bundle",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Christopher Stadler",
+			"email": "christopher.stadler@guavestudios.com",
+			"homepage": "https://github.com/guavestudios"
+		}
+	],
+	"require": {
+		"contao/core-bundle": "^4.9"
+	},
+	"autoload": {
+		"psr-4": {
+			"Guave\\AssetLoadBundle\\": "src/"
+		}
+	},
+	"extra": {
+		"contao-manager-plugin": "Guave\\AssetLoadBundle\\ContaoManager\\Plugin"
+	},
+	"minimum-stability": "stable"
 }

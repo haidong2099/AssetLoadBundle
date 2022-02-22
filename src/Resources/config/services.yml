@@ -1,0 +1,17 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  Guave\AssetLoadBundle\:
+    resource: ../../../src
+    exclude: ../../../src/{Entity,Migrations,Resources,Tests}
+
+  Guave\AssetLoadBundle\Controller\:
+    resource: ../../../src/Controller
+    public: true
+
+  Guave\AssetLoadBundle\Twig\AssetLoadExtension:
+    tags:
+      - { name: twig.extension }
