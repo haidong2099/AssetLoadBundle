@@ -2,7 +2,7 @@
 
 namespace Guave\AssetLoadBundle\Twig;
 
-use Guave\DefaultSiteBundle\Helpers\ImageHelper;
+use Guave\AssetLoadBundle\Helper\ImageHelper;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Guave\DefaultSiteBundle\Helpers;
+namespace Guave\AssetLoadBundle\Helper;
 
 use Contao\FilesModel;
 use Contao\Image;
