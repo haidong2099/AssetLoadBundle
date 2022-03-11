@@ -3,7 +3,6 @@
 namespace Guave\AssetLoadBundle\Helper;
 
 use Contao\System;
-use DOMDocument;
 use Exception;
 use RuntimeException;
 
@@ -16,7 +15,7 @@ class AssetHelper
      */
     public static function assets(string $fileName): string
     {
-        $filesDir = $GLOBALS['TL_CONFIG']['assetPath'];
+        $filesDir = System::getContainer()->getParameter('contao.localconfig')['assetPath'];
         $assetPath = $filesDir . "/" . $fileName;
         $manifest = json_decode(
             file_get_contents(
@@ -26,39 +25,6 @@ class AssetHelper
         );
 
         return $manifest[$assetPath];
-    }
-
-    public static function loadSvg(string $filePath, string $class = '', bool $silent = false)
-    {
-        $filePath = $filePath[0] === '/' ? $filePath : '/' . $filePath;
-        $filePath = TL_ROOT . $filePath;
-
-        if ('' === $filePath || !isset($filePath)) {
-            return '';
-        }
-
-        if (false === file_exists($filePath)) {
-            if ($silent) {
-                return '';
-            }
-
-            return 'file does not exist: ' . $filePath;
-        }
-
-        if ($class) {
-            $svg = file_get_contents($filePath);
-            $dom = new DOMDocument();
-            // this is necessary, because for some reason DOMDocument can't handle the truth!!! I mean SVG ;)
-            libxml_use_internal_errors(true);
-            $dom->loadHTML($svg);
-            foreach ($dom->getElementsByTagName('svg') as $element) {
-                $classes = $element->getAttribute('class') ?: '';
-                $element->setAttribute('class', "$classes $class");
-            }
-            return $dom->saveHTML();
-        }
-
-        return file_get_contents($filePath);
     }
 
     /**
@@ -80,7 +46,8 @@ class AssetHelper
     public static function loadEntrypoint($entrypoint, $resourceType, $parameters = []): string
     {
         $rootDir = System::getContainer()->getParameter('kernel.project_dir');
-        $path = $rootDir . '/' . $GLOBALS['TL_CONFIG']['assetPath'] . '/dist/entrypoints.json';
+        $assetPath = System::getContainer()->getParameter('contao.localconfig')['assetPath'];
+        $path = $rootDir . '/' . $assetPath . '/dist/entrypoints.json';
 
         if (!file_exists($path)) {
             throw new RuntimeException('entrypoints.json not found. did you run the build?');
@@ -101,7 +68,7 @@ class AssetHelper
 
     protected static function renderResource($type, $path): string
     {
-        $hash = System::getContainer()->getParameter('gitHash');
+        $hash = System::getContainer()->getParameter('contao.localconfig')['gitHash'];
         if ($hash) {
             $version = '?version=' . $hash;
         } else {

@@ -15,3 +15,7 @@ services:
   Guave\AssetLoadBundle\Twig\AssetLoadExtension:
     tags:
       - { name: twig.extension }
+
+  Guave\AssetLoadBundle\Twig\ImageLoadExtension:
+    tags:
+      - { name: twig.extension }
