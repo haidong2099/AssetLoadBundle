@@ -80,3 +80,13 @@ or with PHP:
 <?php use Guave\AssetLoadBundle\Helper\ImageHelper; ?>
 <?= ImageHelper::loadSvg(TL_ROOT.'files/project-name/images/file-name.svg');
 ```
+
+### get dynamic Template Path
+dynamic by active theme
+```PHP
+{{ dynamic_template_path('base') }}
+```
+dynamic by theme
+```PHP
+{{ dynamic_template_path('base', 'test') }}
+```

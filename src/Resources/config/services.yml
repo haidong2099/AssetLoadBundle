@@ -19,3 +19,9 @@ services:
   Guave\AssetLoadBundle\Twig\ImageLoadExtension:
     tags:
       - { name: twig.extension }
+
+  Guave\AssetLoadBundle\Twig\TwigTemplateExtension:
+    arguments:
+      - '@contao.twig.filesystem_loader'
+    tags:
+      - { name: twig.extension }
