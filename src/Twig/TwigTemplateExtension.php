@@ -22,6 +22,7 @@ class TwigTemplateExtension extends \Twig\Extension\AbstractExtension
     {
         return [
             new TwigFunction('dynamic_template_path', [$this, 'getDynamicThemePath']),
+            new TwigFunction('theme_slug', [$this, 'getThemeSlug']),
         ];
     }
 
@@ -39,12 +40,12 @@ class TwigTemplateExtension extends \Twig\Extension\AbstractExtension
         return $template;
     }
 
-    private function getThemeSlug(): ?string
+    public function getThemeSlug(): ?string
     {
         global $objPage;
 
         if ($objPage && $objPage->templateGroup) {
-            return substr($objPage->templateGroup, 10); // remove tempaltes/
+            return substr($objPage->templateGroup, 10); // remove templates/
         }
 
         return null;
