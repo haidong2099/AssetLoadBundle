@@ -4,7 +4,11 @@ namespace Guave\AssetLoadBundle\Helper;
 
 use Contao\FilesModel;
 use Contao\Image;
+use Contao\Image\ImageInterface;
+use Contao\Image\PictureConfiguration;
+use Contao\Image\PictureConfigurationItem;
 use Contao\Image\ResizeConfiguration;
+use Contao\Image\ResizeOptions;
 use Contao\System;
 use DOMDocument;
 
@@ -69,6 +73,7 @@ class ImageHelper
                 $classes = $element->getAttribute('class') ?: '';
                 $element->setAttribute('class', "$classes $class");
             }
+
             return $dom->saveHTML();
         }
 
@@ -77,27 +82,30 @@ class ImageHelper
 
     public static function generateSrcset($image, $sizes = [], $mode = 'proportional'): object
     {
-        $srcset = '';
+        $srcset = [];
         $src = '';
+        $ext = strtolower(pathinfo($image, PATHINFO_EXTENSION));
 
-        if (count($sizes)) {
-            $srcset = array_reduce($sizes, static function ($carry, $item) use ($image, $mode) {
-                if ($carry) {
-                    $carry .= ', ';
+        if ($ext === 'gif') {
+            $src = $image;
+        } else {
+            if ($image && count($sizes)) {
+                try {
+                    foreach ($sizes as $i => $size) {
+                        $picture = self::getPicture($image, $size, $mode);
+
+                        if ($i == 0) {
+                            $src = $picture['img']['src'];
+                        }
+                        $srcset[] = $picture['img']['src'] . " {$size['width']}w";
+                    }
+                } catch (\Exception $e) {
                 }
-                $carry .= self::resizeImage(
-                        $image,
-                        $item['width'],
-                        $item['height'],
-                        $mode
-                    ) . ' ' . $item['width'] . 'w';
-                return $carry;
-            }, '');
-            $src = self::resizeImage($image, $sizes[0]['width'], $sizes[0]['height'], $mode);
+            }
         }
 
-        return (object)[
-            'srcset' => $srcset,
+        return (object) [
+            'srcset' => implode(', ', $srcset),
             'src' => $src,
         ];
     }
@@ -110,25 +118,102 @@ class ImageHelper
     }
 
     public static function generatePictureElement(
-        $image,
+        string $path,
         $sizes = [],
-        $mode = 'proportional',
+        $mode = 'crop',
         $alt = '',
         $objectFit = false,
         $imageClass = ''
     ): string {
-        $output = '<picture>' . "\n";
-        foreach ($sizes as $index => $size) {
-            $resizedImage = self::resizeImage($image, $size['width'], $size['height'], 'crop');
-            $media = $size['breakpoint'] ? 'media="(min-width: ' . $size['breakpoint'] . ')"' : '';
-            $output .= '<source srcset="' . $resizedImage . '" ' . $media . '>' . "\n";
+        $return = '<picture>';
+        $src = '';
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        if ($ext == 'gif') {
+            $src = $path;
+            $path = '';
         }
 
-        $resizedImage = self::resizeImage($image, $sizes[0]['width'], $sizes[0]['height'], 'crop');
-        $output .= '<img src="' . $resizedImage . '" alt="' . $alt . '" ';
-        $output .= $objectFit ? 'data-object-fit' : '';
-        $output .= ' class="' . $imageClass . '" loading="lazy">' . "\n";
-        $output .= "</picture>";
-        return $output;
+        if ($path) {
+            try {
+                foreach ($sizes as $i => $size) {
+                    $picture = self::getPicture($path, $size, $mode);
+                    $media = $size['breakpoint'] ? "media=\"(min-width: {$size['breakpoint']})\" " : "";
+
+                    if ($i === 0) {
+                        $src = $picture['img']['src'];
+                    }
+
+                    if ($picture['sources']) {
+                        foreach ($picture['sources'] as $source) {
+                            $return .= '<source ' . $media . 'srcset="' . $source['src'] . '" type="' . $source['type'] . '">';
+                        }
+                    } else {
+                        $return .= '<source ' . $media . 'srcset="' . $picture['img']['src'] . '">';
+                    }
+                }
+            } catch (\Exception $e) {
+            }
+        }
+
+        $return .= '<img class="' . $imageClass . '" alt="' . $alt . '" src="' . $src . '"'.$objectFit ? ' data-object-fit' : ''.' loading="lazy"/>';
+        $return .= '</picture>';
+
+        return $return;
+    }
+
+    private static function getPicture(string $path, array $size, $mode = 'proportional'): array
+    {
+        $container = System::getContainer();
+        $imageFactory = $container->get('contao.image.image_factory');
+
+        if ($path instanceof ImageInterface) {
+            $image = $path;
+        } else {
+            $image = $imageFactory->create(TL_ROOT . '/' . $path);
+        }
+
+        $options = new ResizeOptions();
+        $config = new PictureConfiguration();
+
+        $resizeConfig = new ResizeConfiguration();
+        $resizeConfig->setWidth((int) $size['width']);
+        $resizeConfig->setHeight((int) $size['height']);
+        $resizeConfig->setMode($mode);
+        $configItem = new PictureConfigurationItem();
+        $configItem->setResizeConfig($resizeConfig);
+        $config->setSize($configItem);
+
+        $formats = [
+            'png' => [],
+            'jpg' => [],
+            'jpeg' => [],
+        ];
+
+        if (strpos($_SERVER['HTTP_ACCEPT'], 'image/webp') !== false) {
+            foreach ($formats as $k => $format) {
+                $formats[$k] = ['webp'];
+            }
+        } else {
+            foreach ($formats as $k => $format) {
+                $formats[$k] = [$k];
+            }
+        }
+
+        $formats['.default'] = ['.default'];
+
+        $config->setFormats($formats);
+
+        $pictureGenerator = $container->get('contao.image.picture_generator');
+        $picture = $pictureGenerator->generate($image, $config, $options);
+
+        $rootDir = $container->getParameter('kernel.project_dir');
+        $staticUrl = $container->get('contao.assets.files_context')->getStaticUrl();
+
+        return
+            [
+                'img' => $picture->getImg($rootDir, $staticUrl),
+                'sources' => $picture->getSources($rootDir, $staticUrl),
+            ];
     }
 }
