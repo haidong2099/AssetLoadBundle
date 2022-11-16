@@ -4,7 +4,6 @@ namespace Guave\AssetLoadBundle\Helper;
 
 use Contao\FilesModel;
 use Contao\Image;
-use Contao\Image\ImageInterface;
 use Contao\Image\PictureConfiguration;
 use Contao\Image\PictureConfigurationItem;
 use Contao\Image\ResizeConfiguration;
@@ -14,15 +13,6 @@ use DOMDocument;
 
 class ImageHelper
 {
-    public static function getPath($image): string
-    {
-        if ('' === $image) {
-            return '';
-        }
-
-        return FilesModel::findByUuid($image)->path;
-    }
-
     public static function resizeImage($image, $width, $height = 0, $mode = 'proportional'): string
     {
         if ('' === $image || '/' === $image) {
@@ -44,6 +34,15 @@ class ImageHelper
         } catch (\InvalidArgumentException $e) {
             return '';
         }
+    }
+
+    public static function getPath($image): string
+    {
+        if ('' === $image) {
+            return '';
+        }
+
+        return FilesModel::findByUuid($image)->path;
     }
 
     public static function loadSvg(string $filePath, string $class = '', bool $silent = false)
@@ -80,6 +79,13 @@ class ImageHelper
         return file_get_contents($filePath);
     }
 
+    public static function generateSrcsetAttribute($image, $sizes = [], $mode = 'proportional'): string
+    {
+        $strings = self::generateSrcset($image, $sizes, $mode);
+
+        return 'srcset="' . $strings->srcset . '" src="' . $strings->src . '"';
+    }
+
     public static function generateSrcset($image, $sizes = [], $mode = 'proportional'): object
     {
         $srcset = [];
@@ -88,97 +94,38 @@ class ImageHelper
 
         if ($ext === 'gif') {
             $src = $image;
-        } else {
-            if ($image && count($sizes)) {
-                try {
-                    foreach ($sizes as $i => $size) {
-                        $picture = self::getPicture($image, $size, $mode);
-
-                        if ($i == 0) {
-                            $src = $picture['img']['src'];
-                        }
-                        $srcset[] = $picture['img']['src'] . " {$size['width']}w";
-                    }
-                } catch (\Exception $e) {
-                }
-            }
-        }
-
-        return (object) [
-            'srcset' => implode(', ', $srcset),
-            'src' => $src,
-        ];
-    }
-
-    public static function generateSrcsetAttribute($image, $sizes = [], $mode = 'proportional'): string
-    {
-        $strings = self::generateSrcset($image, $sizes, $mode);
-
-        return 'srcset="' . $strings->srcset . '" src="' . $strings->src . '"';
-    }
-
-    public static function generatePictureElement(
-        string $path,
-        $sizes = [],
-        $mode = 'crop',
-        $alt = '',
-        $objectFit = false,
-        $imageClass = ''
-    ): string {
-        $return = '<picture>';
-        $src = '';
-        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-
-        if ($ext == 'gif') {
-            $src = $path;
-            $path = '';
-        }
-
-        if ($path) {
+        } elseif ($image && count($sizes)) {
             try {
                 foreach ($sizes as $i => $size) {
-                    $picture = self::getPicture($path, $size, $mode);
-                    $media = $size['breakpoint'] ? "media=\"(min-width: {$size['breakpoint']})\" " : "";
+                    $picture = self::getPicture($image, $size, $mode);
 
                     if ($i === 0) {
                         $src = $picture['img']['src'];
                     }
-
-                    if ($picture['sources']) {
-                        foreach ($picture['sources'] as $source) {
-                            $return .= '<source ' . $media . 'srcset="' . $source['src'] . '" type="' . $source['type'] . '">';
-                        }
-                    } else {
-                        $return .= '<source ' . $media . 'srcset="' . $picture['img']['src'] . '">';
-                    }
+                    $srcset[] = rawurlencode($picture['img']['src']) . " {$size['width']}w";
                 }
             } catch (\Exception $e) {
             }
         }
 
-        $return .= '<img class="' . $imageClass . '" alt="' . $alt . '" src="' . $src . '"'.$objectFit ? ' data-object-fit' : ''.' loading="lazy"/>';
-        $return .= '</picture>';
-
-        return $return;
+        return (object)[
+            'srcset' => implode(', ', $srcset),
+            'src' => $src,
+        ];
     }
 
     private static function getPicture(string $path, array $size, $mode = 'proportional'): array
     {
         $container = System::getContainer();
         $imageFactory = $container->get('contao.image.image_factory');
-
-        if ($path instanceof ImageInterface) {
-            $image = $path;
-        } else {
-            $image = $imageFactory->create(TL_ROOT . '/' . $path);
-        }
+        $image = $imageFactory->create(TL_ROOT . '/' . $path);
 
         $options = new ResizeOptions();
         $config = new PictureConfiguration();
 
         $resizeConfig = new ResizeConfiguration();
-        $resizeConfig->setWidth((int) $size['width']);
-        $resizeConfig->setHeight((int) $size['height']);
+        $resizeConfig->setWidth((int)$size['width']);
+        $resizeConfig->setHeight((int)$size['height']);
         $resizeConfig->setMode($mode);
         $configItem = new PictureConfigurationItem();
         $configItem->setResizeConfig($resizeConfig);
@@ -210,10 +157,55 @@ class ImageHelper
         $rootDir = $container->getParameter('kernel.project_dir');
         $staticUrl = $container->get('contao.assets.files_context')->getStaticUrl();
 
-        return
-            [
-                'img' => $picture->getImg($rootDir, $staticUrl),
-                'sources' => $picture->getSources($rootDir, $staticUrl),
-            ];
+        return [
+            'img' => $picture->getImg($rootDir, $staticUrl),
+            'sources' => $picture->getSources($rootDir, $staticUrl),
+        ];
+    }
+
+    public static function generatePictureElement(
+        string $path,
+        $sizes = [],
+        $mode = 'crop',
+        $imageClass = '',
+        $alt = '',
+        $objectFit = false
+    ): string {
+        $return = '<picture>';
+        $src = '';
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        if ($ext === 'gif') {
+            $src = $path;
+            $path = '';
+        }
+
+        if ($path) {
+            try {
+                foreach ($sizes as $i => $size) {
+                    $picture = self::getPicture($path, $size, $mode);
+                    $media = $size['breakpoint'] ? 'media="(min-width: ' . $size['breakpoint'] . ')" ' : '';
+
+                    if ($i === 0) {
+                        $src = $picture['img']['src'];
+                    }
+
+                    if ($picture['sources']) {
+                        foreach ($picture['sources'] as $source) {
+                            $return .= '<source ' . $media . 'srcset="/' . $source['src'] . '" type="' . $source['type'] . '">';
+                        }
+                    } else {
+                        $return .= '<source ' . $media . 'srcset="/' . $picture['img']['src'] . '">';
+                    }
+                }
+            } catch (\Exception $e) {
+            }
+        }
+
+        $objFitAttr = $objectFit ? ' data-object-fit' : '';
+        $return .= '<img class="' . $imageClass . '" alt="' . $alt . '" src="/' . $src . '"' . $objFitAttr . ' loading="lazy"/>';
+        $return .= '</picture>';
+
+        return $return;
     }
 }
