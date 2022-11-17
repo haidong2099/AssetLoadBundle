@@ -102,7 +102,7 @@ class ImageHelper
                     if ($i === 0) {
                         $src = $picture['img']['src'];
                     }
-                    $srcset[] = rawurlencode($picture['img']['src']) . " {$size['width']}w";
+                    $srcset[] = ($picture['img']['src']) . " {$size['width']}w";
                 }
             } catch (\Exception $e) {
             }
