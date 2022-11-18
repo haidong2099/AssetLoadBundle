@@ -20,20 +20,12 @@ class ImageHelper
         }
         $image = '/' . ltrim($image, '/');
 
-        try {
-            return Image::getPath(
-                System::getContainer()->get('contao.image.image_factory')
-                    ->create(
-                        TL_ROOT . $image,
-                        (new ResizeConfiguration())
-                            ->setWidth($width)
-                            ->setHeight($height)
-                            ->setMode($mode)
-                    )->getUrl(TL_ROOT)
-            );
-        } catch (\InvalidArgumentException $e) {
-            return '';
+        $return = self::getPicture($image, ['width' => $width, 'height' => $height], $mode);
+        if (isset($return['img'])) {
+            return $return['img']['src'];
         }
+
+        return '';
     }
 
     public static function getPath($image): string
