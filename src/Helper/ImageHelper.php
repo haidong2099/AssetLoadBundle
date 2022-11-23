@@ -9,15 +9,28 @@ use Contao\Image\PictureConfigurationItem;
 use Contao\Image\ResizeConfiguration;
 use Contao\Image\ResizeOptions;
 use Contao\System;
+use Contao\Validator;
 use DOMDocument;
 
 class ImageHelper
 {
     public static function resizeImage($image, $width, $height = 0, $mode = 'proportional'): string
     {
-        if ('' === $image || '/' === $image) {
+        if (empty($image) || '/' === $image) {
             return '';
         }
+
+        $isString = \is_string($image);
+
+        $validatorAdapter = new Validator();
+        if (!$isString) {
+            return '';
+        }
+
+        if ($isString && $validatorAdapter->isUuid($image)) {
+            $image = self::getPath($image);
+        }
+
         $image = '/' . ltrim($image, '/');
 
         $return = self::getPicture($image, ['width' => $width, 'height' => $height], $mode);
@@ -30,7 +43,7 @@ class ImageHelper
 
     public static function getPath($image): string
     {
-        if ('' === $image || '/' === $image) {
+        if (empty($image) || '/' === $image) {
             return '';
         }
 
