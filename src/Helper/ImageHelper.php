@@ -30,11 +30,13 @@ class ImageHelper
 
     public static function getPath($image): string
     {
-        if ('' === $image) {
+        if ('' === $image || '/' === $image) {
             return '';
         }
 
-        return FilesModel::findByUuid($image)->path;
+        $file = FilesModel::findByUuid($image);
+
+        return $file->path ?? '';
     }
 
     public static function loadSvg(string $filePath, string $class = '', bool $silent = false)
