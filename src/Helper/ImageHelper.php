@@ -108,6 +108,7 @@ class ImageHelper
 
     private static function getPicture(string $path, array $size, $mode = 'proportional'): array
     {
+        $path = urldecode($path);
         $container = System::getContainer();
         $imageFactory = $container->get('contao.image.image_factory');
         $image = $imageFactory->create(TL_ROOT . '/' . $path);
