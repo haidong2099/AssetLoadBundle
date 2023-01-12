@@ -2,12 +2,11 @@
 
 namespace Guave\AssetLoadBundle\Helper;
 
+use Contao\CoreBundle\Image\Studio\Studio;
 use Contao\FilesModel;
-use Contao\Image;
 use Contao\Image\PictureConfiguration;
 use Contao\Image\PictureConfigurationItem;
 use Contao\Image\ResizeConfiguration;
-use Contao\Image\ResizeOptions;
 use Contao\System;
 use Contao\Validator;
 use DOMDocument;
@@ -123,51 +122,35 @@ class ImageHelper
 
     private static function getPicture(string $path, array $size, $mode = 'proportional'): array
     {
-        $path = urldecode($path);
-        $container = System::getContainer();
-        $imageFactory = $container->get('contao.image.image_factory');
-        $image = $imageFactory->create(TL_ROOT . '/' . $path);
-
-        $options = new ResizeOptions();
-        $config = new PictureConfiguration();
-
-        $resizeConfig = new ResizeConfiguration();
-        $resizeConfig->setWidth((int)$size['width']);
-        $resizeConfig->setHeight((int)$size['height']);
-        $resizeConfig->setMode($mode);
-        $configItem = new PictureConfigurationItem();
-        $configItem->setResizeConfig($resizeConfig);
-        $config->setSize($configItem);
-
         $formats = [
-            'png' => [],
-            'jpg' => [],
-            'jpeg' => [],
+            'jpg' => ['jpg', 'webp'],
+            'webp' => ['jpg', 'webp'],
+            'png' => ['png', 'webp'],
         ];
 
-        if (strpos($_SERVER['HTTP_ACCEPT'], 'image/webp') !== false) {
-            foreach ($formats as $k => $format) {
-                $formats[$k] = ['webp'];
-            }
-        } else {
-            foreach ($formats as $k => $format) {
-                $formats[$k] = [$k];
-            }
-        }
+        $resizeConfig = (new ResizeConfiguration())
+            ->setWidth((int)$size['width'])
+            ->setHeight((int)$size['height'])
+            ->setMode($mode);
+        $configItem = (new PictureConfigurationItem())
+            ->setResizeConfig($resizeConfig);
+        $picConfig = (new PictureConfiguration())
+            ->setSize($configItem)
+            ->setFormats($formats);
 
-        $formats['.default'] = ['.default'];
+        $imageFactory = System::getContainer()
+            ->get(Studio::class)
+            ->createFigureBuilder();
 
-        $config->setFormats($formats);
-
-        $pictureGenerator = $container->get('contao.image.picture_generator');
-        $picture = $pictureGenerator->generate($image, $config, $options);
-
-        $rootDir = $container->getParameter('kernel.project_dir');
-        $staticUrl = $container->get('contao.assets.files_context')->getStaticUrl();
+        $figure = $imageFactory
+            ->from(TL_ROOT . '/' . $path)
+            ->setSize($picConfig)
+            ->build();
+        $image = $figure->getImage();
 
         return [
-            'img' => $picture->getImg($rootDir, $staticUrl),
-            'sources' => $picture->getSources($rootDir, $staticUrl),
+            'img' => $image->getImg(),
+            'sources' => $image->getSources(),
         ];
     }
 
