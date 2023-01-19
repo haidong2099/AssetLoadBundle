@@ -123,10 +123,22 @@ class ImageHelper
     private static function getPicture(string $path, array $size, $mode = 'proportional'): array
     {
         $formats = [
-            'jpg' => ['jpg', 'webp'],
-            'webp' => ['jpg', 'webp'],
-            'png' => ['png', 'webp'],
+            'jpg' => [],
+            'jpeg' => [],
+            'png' => [],
         ];
+
+        if (strpos($_SERVER['HTTP_ACCEPT'], 'image/webp') !== false) {
+            foreach ($formats as $k => $format) {
+                $formats[$k] = ['webp'];
+            }
+        } else {
+            foreach ($formats as $k => $format) {
+                $formats[$k] = [$k];
+            }
+        }
+
+        $formats['.default'] = ['.default'];
 
         $resizeConfig = (new ResizeConfiguration())
             ->setWidth((int)$size['width'])
