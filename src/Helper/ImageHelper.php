@@ -28,6 +28,9 @@ class ImageHelper
 
         if ($isString && $validatorAdapter->isUuid($image)) {
             $image = self::getPath($image);
+            if (empty($image)) {
+                return ''; // image not found
+            }
         }
 
         $image = '/' . ltrim($image, '/');
