@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Guave\AssetLoadBundle\Twig;
 
 use Contao\CoreBundle\Twig\Inheritance\TemplateHierarchyInterface;
+use Guave\AssetLoadBundle\Helper\TwigHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Filesystem\Path;
 use Twig\TwigFunction;
@@ -23,6 +24,7 @@ class TwigTemplateExtension extends \Twig\Extension\AbstractExtension
         return [
             new TwigFunction('dynamic_template_path', [$this, 'getDynamicThemePath']),
             new TwigFunction('theme_slug', [$this, 'getThemeSlug']),
+            new TwigFunction('analytics_id', [TwigHelper::class, 'getAnalyticsId']),
         ];
     }
 
