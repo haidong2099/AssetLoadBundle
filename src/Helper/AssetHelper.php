@@ -3,6 +3,7 @@
 namespace Guave\AssetLoadBundle\Helper;
 
 use Contao\System;
+use DOMDocument;
 use Exception;
 use RuntimeException;
 
@@ -83,5 +84,39 @@ class AssetHelper
             default:
                 return "<!-- don't know how to render '{$type}' -->\n";
         }
+    }
+
+    public static function loadSvg(string $filePath, string $class = '', bool $silent = false)
+    {
+        $filePath = $filePath[0] === '/' ? $filePath : '/' . $filePath;
+        $filePath = TL_ROOT . $filePath;
+
+        if ('' === $filePath || !isset($filePath)) {
+            return '';
+        }
+
+        if (false === file_exists($filePath)) {
+            if ($silent) {
+                return '';
+            }
+
+            return 'file does not exist: ' . $filePath;
+        }
+
+        if ($class) {
+            $svg = file_get_contents($filePath);
+            $dom = new DOMDocument();
+            // this is necessary, because for some reason DOMDocument can't handle the truth!!! I mean SVG ;)
+            libxml_use_internal_errors(true);
+            $dom->loadHTML($svg);
+            foreach ($dom->getElementsByTagName('svg') as $element) {
+                $classes = $element->getAttribute('class') ?: '';
+                $element->setAttribute('class', "$classes $class");
+            }
+
+            return $dom->saveHTML();
+        }
+
+        return file_get_contents($filePath);
     }
 }

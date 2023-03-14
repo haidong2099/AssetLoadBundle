@@ -6,17 +6,13 @@ services:
 
   Guave\AssetLoadBundle\:
     resource: ../../../src
-    exclude: ../../../src/{Entity,Migrations,Resources,Tests}
+    exclude: ../../../src/{Entity,Migrations,Model,Resources,Tests,Widget}
 
   Guave\AssetLoadBundle\Controller\:
     resource: ../../../src/Controller
     public: true
 
   Guave\AssetLoadBundle\Twig\AssetLoadExtension:
-    tags:
-      - { name: twig.extension }
-
-  Guave\AssetLoadBundle\Twig\ImageLoadExtension:
     tags:
       - { name: twig.extension }
 

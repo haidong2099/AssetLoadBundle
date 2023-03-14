@@ -1,16 +1,13 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Guave\AssetLoadBundle\Twig;
 
 use Contao\CoreBundle\Twig\Inheritance\TemplateHierarchyInterface;
 use Guave\AssetLoadBundle\Helper\TwigHelper;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Filesystem\Path;
+use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
-class TwigTemplateExtension extends \Twig\Extension\AbstractExtension
+class TwigTemplateExtension extends AbstractExtension
 {
     private TemplateHierarchyInterface $hierarchy;
 
@@ -19,7 +16,7 @@ class TwigTemplateExtension extends \Twig\Extension\AbstractExtension
         $this->hierarchy = $hierarchy;
     }
 
-    public function getFunctions()
+    public function getFunctions(): array
     {
         return [
             new TwigFunction('dynamic_template_path', [$this, 'getDynamicThemePath']),
@@ -33,9 +30,9 @@ class TwigTemplateExtension extends \Twig\Extension\AbstractExtension
         if (!$theme) {
             $theme = $this->getThemeSlug();
         }
-        $chains = $this->hierarchy->getInheritanceChains($theme);
 
-        if (!empty($chains) && key_exists($template, $chains)) {
+        $chains = $this->hierarchy->getInheritanceChains($theme);
+        if (!empty($chains) && array_key_exists($template, $chains)) {
             return array_shift($chains[$template]);
         }
 
@@ -47,7 +44,7 @@ class TwigTemplateExtension extends \Twig\Extension\AbstractExtension
         global $objPage;
 
         if ($objPage && $objPage->templateGroup) {
-            return substr($objPage->templateGroup, 10); // remove templates/
+            return substr($objPage->templateGroup, 10);
         }
 
         return null;

@@ -51,21 +51,6 @@ or with PHP
 <?= AssetHelper::loadJsViaEntrypoints('file-name') ?>
 ```
 
-### Load a Contao image
-
-Get the path from an uploaded image's DB binary with Twig:
-
-```PHP
-{{ imagePath('db-binary-string') }}
-```
-
-and with PHP:
-
-```PHP
-<?php use Guave\AssetLoadBundle\Helper\ImageHelper; ?>
-<?= ImageHelper::imagePath('db-binary-string');
-```
-
 ### Load an SVG image
 
 Use the following in your templates with Twig:
@@ -77,16 +62,71 @@ Use the following in your templates with Twig:
 or with PHP:
 
 ```PHP
-<?php use Guave\AssetLoadBundle\Helper\ImageHelper; ?>
-<?= ImageHelper::loadSvg(TL_ROOT.'files/project-name/images/file-name.svg');
+<?php use Guave\AssetLoadBundle\Helper\AssetHelper; ?>
+<?= AssetHelper::loadSvg(TL_ROOT.'files/project-name/images/file-name.svg') ?>
 ```
 
 ### get dynamic Template Path
+
 dynamic by active theme
+
 ```PHP
-{{ dynamic_template_path('base') }}
+{% extends dynamic_template_path('base') %}
 ```
+
 dynamic by theme
+
 ```PHP
-{{ dynamic_template_path('base', 'test') }}
+{% extends dynamic_template_path('base', 'test') %}
+```
+
+## Deprecations
+
+The ImageHelper is now deprecated, it's recommended to use the [Contao Image Studio](https://docs.contao.org/dev/framework/image-processing/image-studio/).
+
+Define sizes in config.yml and use in contao_figure with image path or ID:
+
+```YAML
+contao:
+  image:
+    sizes:
+      _defaults:
+        formats:
+          jpg: [ webp, jpg ]
+          webp: [ webp, jpg ]
+          png: [ webp, png ]
+        resize_mode: crop
+        densities: 1.5x, 2x
+        lazy_loading: true
+
+      large_photo:
+        width: 1000
+        height: 500
+
+      medium_photo:
+        width: 500
+        height: 250
+
+      small_box:
+        width: 100
+        height: 100
+        resize_mode: box
+        densities: 2x
+```
+
+```PHP
+{{ contao_figure('path/to/my/image.png', '_medium_photo') }}
+```
+
+Define sizes dynamically in contao_figure directly:
+
+```PHP
+{{ contao_figure('image_id', [200, 200, 'proportional'], { 
+  metadata: { alt: 'Contao Logo', caption: 'Look at this CMS!' },
+  enableLightbox: true,
+  lightboxGroupIdentifier: 'logos',
+  lightboxSize: '_large_photo',
+  linkHref: 'https://contao.org',
+  options: { attr: { class: 'logo-container' } }
+}) }}
 ```
