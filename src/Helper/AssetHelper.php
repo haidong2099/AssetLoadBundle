@@ -17,10 +17,10 @@ class AssetHelper
     public static function assets(string $fileName): string
     {
         $filesDir = System::getContainer()->getParameter('contao.localconfig')['assetPath'];
-        $assetPath = $filesDir . "/" . $fileName;
+        $assetPath = $filesDir . '/' . $fileName;
         $manifest = json_decode(
             file_get_contents(
-                implode("/", [$_SERVER['DOCUMENT_ROOT'], $filesDir, 'dist', 'manifest.json'])
+                $_SERVER['DOCUMENT_ROOT'] . '/' .$filesDir . '/dist/manifest.json'
             ),
             true
         );
@@ -31,7 +31,7 @@ class AssetHelper
     /**
      * @throws Exception
      */
-    public static function loadJsViaEntrypoints($entrypoint, $parameters = []): string
+    public static function loadJsViaEntrypoints(string $entrypoint, array $parameters = []): string
     {
         return self::loadEntrypoint($entrypoint, 'js', $parameters);
     }
@@ -39,12 +39,12 @@ class AssetHelper
     /**
      * @throws Exception
      */
-    public static function loadCssViaEntrypoints($entrypoint, $parameters = []): string
+    public static function loadCssViaEntrypoints(string $entrypoint, array $parameters = []): string
     {
         return self::loadEntrypoint($entrypoint, 'css', $parameters);
     }
 
-    public static function loadEntrypoint($entrypoint, $resourceType, $parameters = []): string
+    public static function loadEntrypoint(string $entrypoint, string $resourceType, array $parameters = []): string
     {
         $rootDir = System::getContainer()->getParameter('kernel.project_dir');
         $assetPath = System::getContainer()->getParameter('contao.localconfig')['assetPath'];
@@ -67,7 +67,7 @@ class AssetHelper
         return implode("", $resources);
     }
 
-    protected static function renderResource($type, $path): string
+    protected static function renderResource(string $type, string $path): string
     {
         $hash = System::getContainer()->getParameter('contao.localconfig')['gitHash'];
         if ($hash) {
