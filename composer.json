@@ -13,7 +13,7 @@
 	"require": {
 		"ext-dom": "*",
 		"php": "8.2.15",
-		"contao/core-bundle": "5.3"
+		"contao/core-bundle": "5.2.10"
 	},
 	"require-dev": {
 		"roave/security-advisories": "dev-latest"
