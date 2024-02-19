@@ -10,9 +10,20 @@ This contao module allow you to load assets
 
 ## Install
 
-```BASH
-$ composer require guave/assetload-bundle
+Add to composer.json :
 ```
+"require": {
+        ...
+        "guave/assetload-bundle": "dev-master"
+    },
+"repositories": [
+    {
+        "type": "vcs",
+        "url": "https://github.com/haidong2099/AssetLoadBundle.git"
+    }
+],
+```
+Run `composer install`
 
 ## Usage
 
