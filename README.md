@@ -4,8 +4,9 @@ This contao module allow you to load assets
 
 ## Requirements
 
-- Contao 4.13+
-- PHP 7.4 or 8.0+
+- Contao 5.2.*
+- contao/core-bundle 5.2.10
+- PHP 8.2.15
 
 ## Install
 
